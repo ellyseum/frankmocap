@@ -5,7 +5,13 @@ import torch
 from torch.nn import functional as F
 import numpy as np
 
-import torchgeometry
+# torchgeometry was renamed to kornia
+try:
+    import kornia
+    from kornia.geometry.conversions import rotation_matrix_to_angle_axis
+except ImportError:
+    # Fallback: implement rotation_matrix_to_angle_axis locally
+    rotation_matrix_to_angle_axis = None
 
 """
 Useful geometric operations, e.g. Perspective projection and a differentiable Rodrigues formula
@@ -219,8 +225,9 @@ def rotmat_to_angleaxis(init_pred_rotmat):
     ones = torch.tensor([0,0,1], dtype=torch.float32,).view(1, 3, 1).expand(init_pred_rotmat.shape[1], -1, -1).to(device)
 
     pred_rotmat_hom = torch.cat([ init_pred_rotmat.view(-1, 3, 3),ones ], dim=-1)       #24,3,4
-    pred_aa = torchgeometry.rotation_matrix_to_angle_axis(pred_rotmat_hom).contiguous().view(1, -1)  #[1,72]
-    # tgm.rotation_matrix_to_angle_axis returns NaN for 0 rotation, so manually hack it
+    # Use kornia (formerly torchgeometry) for rotation matrix to angle axis conversion
+    pred_aa = rotation_matrix_to_angle_axis(pred_rotmat_hom).contiguous().view(1, -1)  #[1,72]
+    # rotation_matrix_to_angle_axis returns NaN for 0 rotation, so manually hack it
     pred_aa[torch.isnan(pred_aa)] = 0.0       #[1,72]
     pred_aa = pred_aa.view(1,24,3) 
 

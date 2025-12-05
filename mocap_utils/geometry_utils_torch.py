@@ -3,7 +3,10 @@
 import torch
 import torch.nn as nn
 import numpy as np
-import torchgeometry as tgm
+# Note: torchgeometry was renamed to kornia
+# The functions in this file are self-contained implementations,
+# so we don't need to import kornia. The 'tgm' references in docstrings
+# are just for documentation purposes.
 
 __all__ = [
     # flip 3d hand
